@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd" >
+    
+    <!-- DAO -->
+    <bean id="crmnotifygru.demandDAO"  class="fr.paris.lutece.plugins.grubusiness.business.mock.MockDemandDAO" />
+    <bean id="crmnotifygru.notificationDAO"  class="fr.paris.lutece.plugins.grubusiness.business.mock.MockNotificationDAO" />
+    <bean id="crmnotifygru.storageService" class="fr.paris.lutece.plugins.grubusiness.business.demand.DemandService">
+      <constructor-arg ref="crmnotifygru.demandDAO"/>
+      <constructor-arg ref="crmnotifygru.notificationDAO"/>
+    </bean>
+    
+    <!-- REST -->
+    <bean id="crmnotifygru.grurestdatabase" class="fr.paris.lutece.plugins.crmnotifygru.web.rs.crmnotifygruRestService"/>
+       
+    <!-- NOTIFICATION SERVICE -->
+    <bean id="crmnotifygru.notificationService" class="fr.paris.lutece.plugins.crmnotifygru.service.NotificationService"/>  
+   
+    <!-- IDENTITYSTORE BEAN -->
+    <bean id="crmnotifygru.identitystore.httpTransport" class="fr.paris.lutece.plugins.identitystore.v1.web.rs.service.IdentityTransportRest">
+        <property name="IdentityStoreEndPoint">
+            <value>http://localhost:8080/lutece/rest/identitystore</value>
+        </property>
+    </bean>
+    <bean id="crmnotifygru.identitystore.service" class="fr.paris.lutece.plugins.identitystore.v1.web.service.IdentityService">
+        <constructor-arg ref="crmnotifygru.identitystore.httpTransport"/>
+    </bean>
+    
+    
+</beans>
