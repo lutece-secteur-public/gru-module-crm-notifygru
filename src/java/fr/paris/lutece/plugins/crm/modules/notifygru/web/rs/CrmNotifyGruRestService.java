@@ -34,12 +34,15 @@
 package fr.paris.lutece.plugins.crm.modules.notifygru.web.rs;
 
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import fr.paris.lutece.plugins.crm.business.demand.Demand;
 import fr.paris.lutece.plugins.crm.business.demand.DemandStatusCRM;
+import fr.paris.lutece.plugins.crm.business.demand.DemandType;
+import fr.paris.lutece.plugins.crm.business.demand.DemandTypeHome;
 import fr.paris.lutece.plugins.crm.business.notification.Notification;
 import fr.paris.lutece.plugins.crm.business.user.CRMUser;
 import fr.paris.lutece.plugins.crm.service.CRMService;
@@ -54,10 +57,12 @@ import fr.paris.lutece.util.json.ErrorJsonResponse;
 import fr.paris.lutece.util.json.JsonUtil;
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.Locale;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -316,5 +321,32 @@ public class CrmNotifyGruRestService
         String strError = "{ \"status\": \"Error : " + strMessage + "\" }";
 
         return Response.status( status ).entity( strError ).build( );
+    }
+    
+    /**
+     * Web Service methode which permit to store the notification flow into a data store
+     * 
+     * @return The response
+     */
+    @GET
+    @Path( CrmNotifyGruConstants.DEMAND_TYPE_PATH )
+    @Consumes( MediaType.APPLICATION_JSON )
+    @Produces( MediaType.APPLICATION_JSON )
+    public Response getDemandTypes( )
+    {
+
+        List<DemandType> listDemandTypes = DemandTypeHome.findAll( );
+        try
+        {
+            ObjectMapper mapper = new ObjectMapper( );
+            
+            String strResult = mapper.writeValueAsString( listDemandTypes );
+            return Response.ok( strResult ).build( );
+        }
+        catch( JsonProcessingException e )
+        {
+            return Response.serverError( ).build( );
+        }
+
     }
 }

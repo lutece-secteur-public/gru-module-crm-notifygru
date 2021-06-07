@@ -43,6 +43,7 @@ public class CrmNotifyGruConstants
     public static final String VERSION = "version";
     public static final String ID = "id";
     public static final String NOTICATION_PATH = "/notification";
+    public static final String DEMAND_TYPE_PATH = "/demandType";
 
     public static final int VERSION_1 = 1;
 
