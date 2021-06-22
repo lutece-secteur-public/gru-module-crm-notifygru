@@ -7,9 +7,9 @@
 
 ## Introduction
 
-Rest service dedicated to GRU notifications, to create or update notification (and demand) in one call.
+Service Rest dédié aux notifications GRU, pour création ou mise à jouren un seul appel.
 
-Rest service to list demand types
+Service Rest pour le référentiel des types de demande
 
 ## Configuration
 

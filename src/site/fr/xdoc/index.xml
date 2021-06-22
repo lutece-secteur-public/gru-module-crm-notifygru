@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document>
+    <properties>
+        <title>Module crm-notifygru</title>
+    </properties>
+    <head>
+        <!-- Keywords example : "cms, authentication, cms, workflow, seo, collaborative, ..." 
+             Use the language of this xdoc -->
+        <meta name="keywords" content="notify, gru, crm, rest, notification" />
+    </head>
+    <body>
+        <section name="Module crm-notifygru">
+            <!--
+            <p>
+                <img src="images/grustoragedb-broadcast.png" />
+            </p>
+            -->
+            <subsection name="Introduction">
+                <p>Service Rest dédié aux notifications GRU, pour création ou mise à jouren un seul appel.</p>
+                <p>Service Rest pour le référentiel des types de demande</p>
+            </subsection>
+            <subsection name="Configuration">
+                <p>...</p>
+            </subsection>
+            <subsection name="Usage">
+                <p>Crm API: PUT (...)rest/api/v1/crmnotifygru/notification/</p>
+		<p>Demand Types IDs API : GET (...)/rest/api/v1/crmnotifygru/demandType</p>
+            </subsection>
+        </section>
+    </body>
+</document>
+
