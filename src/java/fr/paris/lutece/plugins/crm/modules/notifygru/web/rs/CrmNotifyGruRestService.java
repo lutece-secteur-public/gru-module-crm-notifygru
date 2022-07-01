@@ -51,6 +51,7 @@ import fr.paris.lutece.plugins.crm.modules.notifygru.util.CrmNotifyGruConstants;
 import fr.paris.lutece.plugins.crm.service.demand.DemandStatusCRMService;
 import fr.paris.lutece.plugins.crm.service.user.CRMUserService;
 import fr.paris.lutece.plugins.rest.service.RestConstants;
+import fr.paris.lutece.portal.service.i18n.I18nService;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.util.json.AbstractJsonResponse;
 import fr.paris.lutece.util.json.ErrorJsonResponse;
@@ -97,7 +98,7 @@ public class CrmNotifyGruRestService
 
         if ( nVersion == CrmNotifyGruConstants.VERSION_1 )
         {
-            return storeNotificationV1( strJson, request.getLocale( ) );
+            return storeNotificationV1( strJson, I18nService.getDefaultLocale( ) );
         }
 
         _logger.error( CrmNotifyGruConstants.ERROR_NOT_FOUND_VERSION );
