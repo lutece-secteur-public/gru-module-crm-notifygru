@@ -33,6 +33,7 @@
  */
 package fr.paris.lutece.plugins.crm.modules.notifygru.web.rs;
 
+import com.ctc.wstx.util.StringUtil;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -195,17 +196,25 @@ public class CrmNotifyGruRestService
             // set modification date
             storedDemand.setDateModification( crmDemand.getDateModification( ) );
 
-            // set status if it has changed (incorrect status will be ignored)
+            // set status id if updated
             if ( storedDemand.getIdStatusCRM( ) != crmDemand.getIdStatusCRM( ) && crmDemand.getIdStatusCRM( ) >= 0 )
             {
-                DemandStatusCRM statusCRM = DemandStatusCRMService.getService( ).getStatusCRM( crmDemand.getIdStatusCRM( ), locale );
-
-                if ( statusCRM != null )
-                {
-                    storedDemand.setIdStatusCRM( crmDemand.getIdStatusCRM( ) );
-                    storedDemand.setStatusText( statusCRM.getLabel( ) );
-                }
+            	storedDemand.setIdStatusCRM( crmDemand.getIdStatusCRM( ) );
             }
+            
+            // set status text if updated
+            if ( crmDemand.getStatusText( )!=null && !crmDemand.getStatusText( ).equals(storedDemand.getStatusText( ) ) )
+            {
+            	storedDemand.setStatusText( crmDemand.getStatusText( ) );
+            }
+            
+            // set status label if not set
+            if ( StringUtils.isBlank( storedDemand.getStatusText( ) ) )
+            {
+            	DemandStatusCRM statusCRM = DemandStatusCRMService.getService( ).getStatusCRM( crmDemand.getIdStatusCRM( ), locale );
+            	storedDemand.setStatusText( statusCRM.getLabel( ) );
+            }  
+      
 
             // update stored demand
             DemandService.getService( ).update( storedDemand );
@@ -273,6 +282,16 @@ public class CrmNotifyGruRestService
             if ( StringUtils.isNumeric( gruNotification.getDemand( ).getTypeId( ) ) )
             {
                 crmDemand.setIdDemandType( Integer.parseInt( gruNotification.getDemand( ).getTypeId( ) ) );
+            }
+            
+            // update  demand status from mydashboard
+            if ( gruNotification.getMyDashboardNotification( ).getStatusText( ) != null ) 
+            {
+            	crmDemand.setStatusText( gruNotification.getMyDashboardNotification( ).getStatusText( ) );
+            }
+            if ( gruNotification.getMyDashboardNotification( ).getStatusId( ) >= 0 ) 
+            {
+            	crmDemand.setIdStatusCRM( gruNotification.getMyDashboardNotification( ).getStatusId( ) );
             }
         }
 
