@@ -188,7 +188,7 @@ public class CrmNotifyGruRestService
             // check if the customer id still the same
             CRMUser storedUser = CRMUserService.getService( ).findByUserGuid( gruNotification.getDemand( ).getCustomer( ).getConnectionId( ) );
 
-            if ( storedUser.getIdCRMUser( ) != storedDemand.getIdCRMUser( ) )
+            if ( storedUser != null && ( storedUser.getIdCRMUser( ) != storedDemand.getIdCRMUser( ) ) )
             {
                 return error( CrmNotifyGruConstants.MESSAGE_INVALID_USER_ID, Response.Status.PRECONDITION_FAILED, null );
             }
