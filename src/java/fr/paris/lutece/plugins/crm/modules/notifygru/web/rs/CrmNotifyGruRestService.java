@@ -80,6 +80,7 @@ import org.apache.log4j.Logger;
 public class CrmNotifyGruRestService
 {
     private final Logger _logger = Logger.getLogger( RestConstants.REST_LOGGER );
+    private final String CHARECTER_REGEXP_FILTER = "[^\\p{L}\\p{M}\\p{N}\\p{P}\\p{Z}\\p{Cf}\\p{Cs}\\p{Sm}\\p{Sc}\\s]";
 
     /**
      * Web Service methode which permit to store the notification flow into a data store
@@ -310,9 +311,13 @@ public class CrmNotifyGruRestService
 
         if ( gruNotification.getMyDashboardNotification( ) != null )
         {
-            crmNotification.setMessage( gruNotification.getMyDashboardNotification( ).getMessage( ) );
+        	// clean message (avoir emoticons...s)
+            crmNotification.setMessage( gruNotification.getMyDashboardNotification( ).getMessage( ).replaceAll(CHARECTER_REGEXP_FILTER,"") );
+            
             crmNotification.setSender( gruNotification.getMyDashboardNotification( ).getSenderName( ) );
-            crmNotification.setObject( gruNotification.getMyDashboardNotification( ).getSubject( ) );
+            
+            // clean subject
+            crmNotification.setObject( gruNotification.getMyDashboardNotification( ).getSubject( ).replaceAll(CHARECTER_REGEXP_FILTER,"") );
         }
 
         return crmNotification;
