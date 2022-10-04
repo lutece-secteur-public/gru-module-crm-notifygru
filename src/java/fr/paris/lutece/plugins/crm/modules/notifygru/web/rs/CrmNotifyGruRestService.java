@@ -33,7 +33,7 @@
  */
 package fr.paris.lutece.plugins.crm.modules.notifygru.web.rs;
 
-import com.ctc.wstx.util.StringUtil;
+
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -240,8 +240,8 @@ public class CrmNotifyGruRestService
 
             crmDemand.setIdCRMUser( nUserId );
 
-            // get status text
-            if ( crmDemand.getIdStatusCRM( ) >= 0 )
+            // get status text if not set in notif
+            if ( StringUtils.isBlank( crmDemand.getStatusText() ) && crmDemand.getIdStatusCRM( ) >= 0 )
             {
                 DemandStatusCRM statusCRM = DemandStatusCRMService.getService( ).getStatusCRM( crmDemand.getIdStatusCRM( ), locale );
                 if ( statusCRM != null )
