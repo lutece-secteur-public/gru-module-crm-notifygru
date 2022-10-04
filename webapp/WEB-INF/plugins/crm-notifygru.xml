@@ -2,7 +2,7 @@
     <!-- Plugin Informations -->
     <name>crmnotifygru</name>
     <class>fr.paris.lutece.portal.service.plugin.PluginDefaultImplementation</class>
-    <version>1.0.2</version>
+    <version>1.0.3-SNAPSHOT</version>
     <documentation/>
     <installation/>
     <changes/>
