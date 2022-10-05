@@ -133,22 +133,11 @@ public class CrmNotifyGruRestService
             return store( gruNotification, locale );
 
         }
-        catch( JsonParseException ex )
+        catch( Exception ex )
         {
             return error( ex + " :" + ex.getMessage( ), Response.Status.INTERNAL_SERVER_ERROR, ex );
         }
-        catch( JsonMappingException ex )
-        {
-            return error( ex + " :" + ex.getMessage( ), Response.Status.INTERNAL_SERVER_ERROR, ex );
-        }
-        catch( IOException ex )
-        {
-            return error( ex + " :" + ex.getMessage( ), Response.Status.INTERNAL_SERVER_ERROR, ex );
-        }
-        catch( NullPointerException ex )
-        {
-            return error( ex + " :" + ex.getMessage( ), Response.Status.INTERNAL_SERVER_ERROR, ex );
-        }
+        
     }
 
     /**
