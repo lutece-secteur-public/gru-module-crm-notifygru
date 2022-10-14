@@ -52,11 +52,13 @@ public class CrmNotifyGruConstants
     public static final String MESSAGE_INVALID_USER_ID = "The user ID doesn't correspond to the user Id of the original Demand";
     public static final String MESSAGE_MISSING_DEMAND_ID = "Demand Id and Demand type Id are mandatory";
     public static final String MESSAGE_MISSING_USER_ID = "User connection id is mandatory";
+	public static final String MESSAGE_INCORRECT_DEMAND_ID = "Demand Type Id not found";
 
     // STATUS MESSAGES
     public static final String STATUS_RECEIVED = "{ \"acknowledge\" : { \"status\": \"received\" } }";
 
     /** The Constant DEFAULT_INT. */
     public static final int DEFAULT_INT = -1;
+
 
 }

@@ -50,6 +50,7 @@ import fr.paris.lutece.plugins.crm.service.CRMService;
 import fr.paris.lutece.plugins.crm.service.demand.DemandService;
 import fr.paris.lutece.plugins.crm.modules.notifygru.util.CrmNotifyGruConstants;
 import fr.paris.lutece.plugins.crm.service.demand.DemandStatusCRMService;
+import fr.paris.lutece.plugins.crm.service.demand.DemandTypeService;
 import fr.paris.lutece.plugins.crm.service.user.CRMUserService;
 import fr.paris.lutece.plugins.rest.service.RestConstants;
 import fr.paris.lutece.portal.service.i18n.I18nService;
@@ -162,6 +163,20 @@ public class CrmNotifyGruRestService
         if ( StringUtils.isBlank( gruNotification.getDemand( ).getId( ) ) || StringUtils.isBlank( gruNotification.getDemand( ).getTypeId( ) ) )
         {
             return error( CrmNotifyGruConstants.MESSAGE_MISSING_DEMAND_ID, Response.Status.PRECONDITION_FAILED, null );
+        }
+
+        // check id demand_type_id is numeric
+        if ( !StringUtils.isNumeric( gruNotification.getDemand( ).getTypeId( ) ) )
+        {
+        	return error( CrmNotifyGruConstants.MESSAGE_INCORRECT_DEMAND_ID, Response.Status.PRECONDITION_FAILED, null );
+        }
+        
+        int demandTypeId = Integer.parseInt( gruNotification.getDemand( ).getTypeId( ) );
+        
+        // check if  demand type id exists
+        if ( DemandTypeService.getService().findByPrimaryKey( demandTypeId  ) == null ) 
+        {
+            return error( CrmNotifyGruConstants.MESSAGE_INCORRECT_DEMAND_ID, Response.Status.PRECONDITION_FAILED, null );
         }
 
         // get CRM demand from GRU Demand
