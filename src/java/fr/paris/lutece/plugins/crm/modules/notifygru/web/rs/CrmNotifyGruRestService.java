@@ -134,7 +134,11 @@ public class CrmNotifyGruRestService
             return store( gruNotification, locale );
 
         }
-        catch( Exception ex )
+        catch ( JsonProcessingException ex )
+        {
+            return error( ex + " :" + ex.getMessage( ), Response.Status.BAD_REQUEST, ex );
+        }
+        catch ( Exception ex )
         {
             return error( ex + " :" + ex.getMessage( ), Response.Status.INTERNAL_SERVER_ERROR, ex );
         }
