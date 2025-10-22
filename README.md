@@ -7,19 +7,42 @@
 
 ## Introduction
 
+This module proposes two different services to store the GRU notifications in the CRM plugin service :
+
+ 
+* A simplified Rest service : Create or update in one call the CRM items : Notification, Demand, Customer.
+* A notifier service to store locally the notification in the CRM service (same site)
+
 Rest service dedicated to GRU notifications, to create or update notification (and demand) in one call.
 
 Rest service to list demand types
 
 ## Configuration
 
-...
+Declare the Rest Service in the context file :
+
+```
+
+                    <bean name="crmnotifygru.restService" class="fr.paris.lutece.plugins.crm.modules.notifygru.web.rs.CrmNotifyGruRestService" />
+                
+```
+
+Or declare the local notifier (if CRM is available in the same site than the notifygru library)
+
+```
+
+                  <bean name="crmnotifygru.localNotifierService" class="fr.paris.lutece.plugins.crm.modules.notifygru.service.CrmNotifierService" />
+                
+                
+```
 
 ## Usage
 
-Crm API: PUT (...)rest/api/v1/crmnotifygru/notification/
+API end points :
 
-Demand Types IDs API : GET (...)/rest/api/v1/crmnotifygru/demandType
+ 
+* Send a notification : PUT (...)/rest/api/v1/crmnotifygru/notification/
+* Demand Types IDs refential : GET (...)/rest/api/v1/crmnotifygru/demandType
 
 
 [Maven documentation and reports](https://dev.lutece.paris.fr/plugins/module-crm-notifygru/)

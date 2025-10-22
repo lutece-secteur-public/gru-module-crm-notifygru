@@ -16,15 +16,32 @@
             </p>
             -->
             <subsection name="Introduction">
-                <p>Service Rest dédié aux notifications GRU, pour création ou mise à jouren un seul appel.</p>
-                <p>Service Rest pour le référentiel des types de demande</p>
+            <p>Ce module propose deux services d'enregistrement des notifications GRU dans le plugin CRM :</p>
+            <ul>
+            	<li>Un service Rest simplifié :   création ou mise à jour en un seul appel des éléments CRM Notification, Demande, Customer.
+            	</li>
+            	<li>Un service de notification local permettant d'enregistrer directement la notification dans les bases CRM.</li>
+            </ul>
+                
             </subsection>
             <subsection name="Configuration">
-                <p>...</p>
+                  <p>Declaration du Rest Service dans le contexte : </p>
+                <pre>
+                    &lt;bean name="crmnotifygru.restService" class="fr.paris.lutece.plugins.crm.modules.notifygru.web.rs.CrmNotifyGruRestService" /&gt;
+                </pre>
+                <p>Ou déclaration du "notifier" local (si CRM est utisé dans le même site que la librairie notifygru) 
+                </p>
+                <pre>
+                  &lt;bean name="crmnotifygru.localNotifierService" class="fr.paris.lutece.plugins.crm.modules.notifygru.service.CrmNotifierService" /&gt;
+                
+                </pre>
             </subsection>
             <subsection name="Usage">
-                <p>Crm API: PUT (...)rest/api/v1/crmnotifygru/notification/</p>
-		<p>Demand Types IDs API : GET (...)/rest/api/v1/crmnotifygru/demandType</p>
+                 <p>API end points : </p>
+	            <ul>
+	                <li>Envoi d'une notification : PUT (...)/rest/api/v1/crmnotifygru/notification/</li>
+					<li>Référentiel des "Demand Types IDs" : GET (...)/rest/api/v1/crmnotifygru/demandType</li>
+				</ul>
             </subsection>
         </section>
     </body>

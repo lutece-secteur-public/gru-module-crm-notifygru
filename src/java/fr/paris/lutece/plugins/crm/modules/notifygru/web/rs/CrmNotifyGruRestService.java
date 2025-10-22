@@ -34,32 +34,6 @@
 package fr.paris.lutece.plugins.crm.modules.notifygru.web.rs;
 
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import fr.paris.lutece.plugins.crm.business.demand.Demand;
-import fr.paris.lutece.plugins.crm.business.demand.DemandStatusCRM;
-import fr.paris.lutece.plugins.crm.business.demand.DemandType;
-import fr.paris.lutece.plugins.crm.business.demand.DemandTypeHome;
-import fr.paris.lutece.plugins.crm.business.notification.Notification;
-import fr.paris.lutece.plugins.crm.business.user.CRMUser;
-import fr.paris.lutece.plugins.crm.service.CRMService;
-import fr.paris.lutece.plugins.crm.service.demand.DemandService;
-import fr.paris.lutece.plugins.crm.modules.notifygru.util.CrmNotifyGruConstants;
-import fr.paris.lutece.plugins.crm.service.demand.DemandStatusCRMService;
-import fr.paris.lutece.plugins.crm.service.demand.DemandTypeService;
-import fr.paris.lutece.plugins.crm.service.user.CRMUserService;
-import fr.paris.lutece.plugins.rest.service.RestConstants;
-import fr.paris.lutece.portal.service.i18n.I18nService;
-import fr.paris.lutece.portal.service.util.AppLogService;
-import fr.paris.lutece.util.json.AbstractJsonResponse;
-import fr.paris.lutece.util.json.ErrorJsonResponse;
-import fr.paris.lutece.util.json.JsonUtil;
-import java.io.IOException;
-import java.sql.Timestamp;
 import java.util.List;
 import java.util.Locale;
 
@@ -74,15 +48,28 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import fr.paris.lutece.plugins.crm.business.demand.DemandType;
+import fr.paris.lutece.plugins.crm.business.demand.DemandTypeHome;
+import fr.paris.lutece.plugins.crm.modules.notifygru.service.CrmNotificationService;
+import fr.paris.lutece.plugins.crm.modules.notifygru.util.CrmNotifyGruConstants;
+import fr.paris.lutece.plugins.grubusiness.business.notification.NotifyGruResponse;
+import fr.paris.lutece.plugins.rest.service.RestConstants;
+import fr.paris.lutece.portal.service.i18n.I18nService;
+import fr.paris.lutece.portal.service.util.AppLogService;
+import fr.paris.lutece.util.json.ErrorJsonResponse;
+import fr.paris.lutece.util.json.JsonUtil;
 
 @Path( RestConstants.BASE_PATH + CrmNotifyGruConstants.API_PATH + CrmNotifyGruConstants.VERSION_PATH + CrmNotifyGruConstants.PLUGIN_NAME )
 public class CrmNotifyGruRestService
 {
     private final Logger _logger = Logger.getLogger( RestConstants.REST_LOGGER );
-    private final String CHARECTER_REGEXP_FILTER = "[^\\p{L}\\p{M}\\p{N}\\p{P}\\p{Z}\\p{Cf}\\p{Cs}\\p{Sm}\\p{Sc}\\s]";
-
+    
     /**
      * Web Service methode which permit to store the notification flow into a data store
      * 
@@ -98,18 +85,28 @@ public class CrmNotifyGruRestService
     @Produces( MediaType.APPLICATION_JSON )
     public Response notifications( @PathParam( CrmNotifyGruConstants.VERSION ) Integer nVersion, String strJson, @Context HttpServletRequest request )
     {
-
+	NotifyGruResponse gruResponse;
+	
         if ( nVersion == CrmNotifyGruConstants.VERSION_1 )
         {
-            return storeNotificationV1( strJson, I18nService.getDefaultLocale( ) );
+            gruResponse = storeNotificationV1( strJson, I18nService.getDefaultLocale( ) );
+            
+            return Response.status( NotifyGruResponse.STATUS_ERROR.equals ( gruResponse.getStatus( ) )
+        	    ?Response.Status.BAD_REQUEST:Response.Status.CREATED )
+                    .entity( gruResponse )
+                    .build( );
         }
-
-        _logger.error( CrmNotifyGruConstants.ERROR_NOT_FOUND_VERSION );
-
-        return Response.status( Response.Status.NOT_FOUND )
-                .entity( JsonUtil
-                        .buildJsonResponse( new ErrorJsonResponse( Response.Status.NOT_FOUND.name( ), CrmNotifyGruConstants.ERROR_NOT_FOUND_VERSION ) ) )
-                .build( );
+        else
+        {
+            gruResponse = CrmNotificationService.error ( CrmNotifyGruConstants.ERROR_NOT_FOUND_VERSION, 
+        	    Response.Status.NOT_FOUND, null);
+            
+            _logger.error( CrmNotifyGruConstants.ERROR_NOT_FOUND_VERSION );
+            
+            return Response.status( Response.Status.NOT_FOUND )
+                    .entity( gruResponse )
+                    .build( );
+        }
     }
 
     /**
@@ -118,7 +115,7 @@ public class CrmNotifyGruRestService
      * @param strJson
      * @return the json response message
      */
-    private Response storeNotificationV1( String strJson, Locale locale )
+    private NotifyGruResponse storeNotificationV1( String strJson, Locale locale )
     {
         try
         {
@@ -131,229 +128,17 @@ public class CrmNotifyGruRestService
                     fr.paris.lutece.plugins.grubusiness.business.notification.Notification.class );
             AppLogService.debug( "crm-notifygru / notification - Received strJson : " + strJson );
 
-            return store( gruNotification, locale );
-
+            return CrmNotificationService.store( gruNotification, locale );
         }
         catch ( JsonProcessingException ex )
         {
-            return error( ex + " :" + ex.getMessage( ), Response.Status.BAD_REQUEST, ex );
+            return CrmNotificationService.error( ex + " :" + ex.getMessage( ), Response.Status.BAD_REQUEST, ex );
         }
         catch ( Exception ex )
         {
-            return error( ex + " :" + ex.getMessage( ), Response.Status.INTERNAL_SERVER_ERROR, ex );
+            return CrmNotificationService.error( ex + " :" + ex.getMessage( ), Response.Status.INTERNAL_SERVER_ERROR, ex );
         }
         
-    }
-
-    /**
-     * Stores a notification and the associated demand
-     * 
-     * @param notification
-     *            the notification to store
-     */
-    private Response store( fr.paris.lutece.plugins.grubusiness.business.notification.Notification gruNotification, Locale locale )
-    {
-        AbstractJsonResponse jsonResponse;
-
-        // check if connection id is present
-        if ( gruNotification.getDemand( ) == null || gruNotification.getDemand( ).getCustomer( ) == null
-                || StringUtils.isBlank( gruNotification.getDemand( ).getCustomer( ).getConnectionId( ) ) )
-        {
-            return error( CrmNotifyGruConstants.MESSAGE_MISSING_USER_ID, Response.Status.PRECONDITION_FAILED, null );
-
-        }
-
-        // check if Demand remote id and demand type id are present
-        if ( StringUtils.isBlank( gruNotification.getDemand( ).getId( ) ) || StringUtils.isBlank( gruNotification.getDemand( ).getTypeId( ) ) )
-        {
-            return error( CrmNotifyGruConstants.MESSAGE_MISSING_DEMAND_ID, Response.Status.PRECONDITION_FAILED, null );
-        }
-
-        // check id demand_type_id is numeric
-        if ( !StringUtils.isNumeric( gruNotification.getDemand( ).getTypeId( ) ) )
-        {
-        	return error( CrmNotifyGruConstants.MESSAGE_INCORRECT_DEMAND_ID, Response.Status.PRECONDITION_FAILED, null );
-        }
-        
-        int demandTypeId = Integer.parseInt( gruNotification.getDemand( ).getTypeId( ) );
-        
-        // check if  demand type id exists
-        if ( DemandTypeService.getService().findByPrimaryKey( demandTypeId  ) == null ) 
-        {
-            return error( CrmNotifyGruConstants.MESSAGE_INCORRECT_DEMAND_ID, Response.Status.PRECONDITION_FAILED, null );
-        }
-
-        // get CRM demand from GRU Demand
-        Demand crmDemand = getCrmDemand( gruNotification );
-
-        // check if crm Demand already exists
-        Demand storedDemand = DemandService.getService( ).findByRemoteKey( crmDemand.getRemoteId( ), crmDemand.getIdDemandType( ) );
-        int demandId = -1;
-
-        if ( storedDemand != null )
-        {
-            demandId = storedDemand.getIdDemand( );
-
-            // check if the customer id still the same
-            CRMUser storedUser = CRMUserService.getService( ).findByUserGuid( gruNotification.getDemand( ).getCustomer( ).getConnectionId( ) );
-
-            if ( storedUser != null && ( storedUser.getIdCRMUser( ) != storedDemand.getIdCRMUser( ) ) )
-            {
-                return error( CrmNotifyGruConstants.MESSAGE_INVALID_USER_ID, Response.Status.PRECONDITION_FAILED, null );
-            }
-
-            // set modification date
-            storedDemand.setDateModification( crmDemand.getDateModification( ) );
-
-            // set status id if updated
-            if ( storedDemand.getIdStatusCRM( ) != crmDemand.getIdStatusCRM( ) && crmDemand.getIdStatusCRM( ) >= 0 )
-            {
-            	storedDemand.setIdStatusCRM( crmDemand.getIdStatusCRM( ) );
-            }
-            
-            // set status text if updated
-            if ( crmDemand.getStatusText( )!=null && !crmDemand.getStatusText( ).equals(storedDemand.getStatusText( ) ) )
-            {
-            	storedDemand.setStatusText( crmDemand.getStatusText( ) );
-            }
-            
-            // set status label if not set
-            if ( StringUtils.isBlank( storedDemand.getStatusText( ) ) )
-            {
-            	DemandStatusCRM statusCRM = DemandStatusCRMService.getService( ).getStatusCRM( crmDemand.getIdStatusCRM( ), locale );
-            	storedDemand.setStatusText( statusCRM.getLabel( ) );
-            }  
-      
-
-            // update stored demand
-            DemandService.getService( ).update( storedDemand );
-        }
-        else
-        {
-            // create user if not exists in CRM database
-            int nUserId;
-            CRMUser storedUser = CRMUserService.getService( ).findByUserGuid( gruNotification.getDemand( ).getCustomer( ).getConnectionId( ) );
-            if ( storedUser != null )
-            {
-                nUserId = storedUser.getIdCRMUser( );
-            }
-            else
-            {
-                CRMUser crmUser = new CRMUser( );
-                crmUser.setUserGuid( gruNotification.getDemand( ).getCustomer( ).getConnectionId( ) );
-                crmUser.setMustBeUpdated( true );
-
-                nUserId = CRMUserService.getService( ).create( crmUser );
-            }
-
-            crmDemand.setIdCRMUser( nUserId );
-
-            // get status text if not set in notif
-            if ( StringUtils.isBlank( crmDemand.getStatusText() ) && crmDemand.getIdStatusCRM( ) >= 0 )
-            {
-                DemandStatusCRM statusCRM = DemandStatusCRMService.getService( ).getStatusCRM( crmDemand.getIdStatusCRM( ), locale );
-                if ( statusCRM != null )
-                {
-                    crmDemand.setStatusText( statusCRM.getLabel( ) );
-                }
-            }
-
-            // create demand
-            demandId = DemandService.getService( ).create( crmDemand );
-        }
-
-        // get CRM notification from GRU notification
-        Notification crmNotification = getCrmNotification( gruNotification );
-
-        CRMService.getService( ).notify( demandId, crmNotification.getObject( ), crmNotification.getMessage( ), crmNotification.getSender( ) );
-
-        // success
-        return Response.status( Response.Status.CREATED ).entity( CrmNotifyGruConstants.STATUS_RECEIVED ).build( );
-    }
-
-    /**
-     * get crm Demand from the GRU Demand of the GRU notification
-     * 
-     * @param gruNotification
-     * @return the demand
-     */
-    private Demand getCrmDemand( fr.paris.lutece.plugins.grubusiness.business.notification.Notification gruNotification )
-    {
-        Demand crmDemand = new Demand( );
-
-        if ( gruNotification.getDemand( ) != null )
-        {
-            crmDemand.setRemoteId( gruNotification.getDemand( ).getId( ) );
-            crmDemand.setIdStatusCRM( gruNotification.getDemand( ).getStatusId( ) );
-            crmDemand.setDateModification( new Timestamp( gruNotification.getDate( ) ) );
-            crmDemand.setData( StringUtils.EMPTY );
-
-            if ( StringUtils.isNumeric( gruNotification.getDemand( ).getTypeId( ) ) )
-            {
-                crmDemand.setIdDemandType( Integer.parseInt( gruNotification.getDemand( ).getTypeId( ) ) );
-            }
-            
-            // update  demand status from mydashboard
-            if ( gruNotification.getMyDashboardNotification( ).getStatusText( ) != null ) 
-            {
-            	crmDemand.setStatusText( gruNotification.getMyDashboardNotification( ).getStatusText( ) );
-            }
-            if ( gruNotification.getMyDashboardNotification( ).getStatusId( ) >= 0 ) 
-            {
-            	crmDemand.setIdStatusCRM( gruNotification.getMyDashboardNotification( ).getStatusId( ) );
-            }
-        }
-
-        return crmDemand;
-    }
-
-    /**
-     * get CRM notification from GRU notification
-     * 
-     * @param gruNotification
-     * @return the notification
-     */
-    private Notification getCrmNotification( fr.paris.lutece.plugins.grubusiness.business.notification.Notification gruNotification )
-    {
-        Notification crmNotification = new Notification( );
-
-        if ( gruNotification.getMyDashboardNotification( ) != null )
-        {
-        	// clean message (avoir emoticons...s)
-            crmNotification.setMessage( gruNotification.getMyDashboardNotification( ).getMessage( ).replaceAll(CHARECTER_REGEXP_FILTER,"") );
-            
-            crmNotification.setSender( gruNotification.getMyDashboardNotification( ).getSenderName( ) );
-            
-            // clean subject
-            crmNotification.setObject( gruNotification.getMyDashboardNotification( ).getSubject( ).replaceAll(CHARECTER_REGEXP_FILTER,"") );
-        }
-
-        return crmNotification;
-    }
-
-    /**
-     * Build an error response
-     * 
-     * @param strMessage
-     *            The error message
-     * @param ex
-     *            An exception
-     * @return The response
-     */
-    private Response error( String strMessage, Response.Status status, Throwable ex )
-    {
-        if ( ex != null )
-        {
-            AppLogService.error( strMessage, ex );
-        }
-        else
-        {
-            AppLogService.error( strMessage );
-        }
-
-        String strError = "{ \"status\": \"Error : " + strMessage + "\" }";
-
-        return Response.status( status ).entity( strError ).build( );
     }
     
     /**
