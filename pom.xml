@@ -10,7 +10,7 @@
 	<groupId>fr.paris.lutece.plugins</groupId>
 	<artifactId>module-crm-notifygru</artifactId>
 	<packaging>lutece-plugin</packaging>
-	<version>1.0.5-SNAPSHOT</version>
+	<version>1.0.5</version>
 	<name>Lutece crm notifygru module</name>
 
 	<repositories>
@@ -75,7 +75,7 @@
 		<connection>scm:git:https://github.com/lutece-secteur-public/gru-module-crm-notifygru.git</connection>
 		<developerConnection>scm:git:https://github.com/lutece-secteur-public/gru-module-crm-notifygru.git</developerConnection>
 		<url>https://github.com/lutece-secteur-public/gru-module-crm-notifygru.git</url>
-	  <tag>HEAD</tag>
+	  <tag>module-crm-notifygru-1.0.5</tag>
   </scm>
 
 </project>
