@@ -15,21 +15,16 @@ Ce module propose deux services d'enregistrement des notifications GRU dans le p
 
 ## Configuration
 
-Declaration du Rest Service dans le contexte :
+Activation du Rest Service dans les propriétés du site (`WEB-INF/conf/override/plugins/crm-notifygru.properties`) :
 
 ```
-
-                    <bean name="crmnotifygru.restService" class="fr.paris.lutece.plugins.crm.modules.notifygru.web.rs.CrmNotifyGruRestService" />
-                
+crm-notifygru.rest.enabled=true
 ```
 
-Ou déclaration du "notifier" local (si CRM est utisé dans le même site que la librairie notifygru)
+Ou activation du "notifier" local (si CRM est utisé dans le même site que la librairie notifygru)
 
 ```
-
-                  <bean name="crmnotifygru.localNotifierService" class="fr.paris.lutece.plugins.crm.modules.notifygru.service.CrmNotifierService" />
-                
-                
+crm-notifygru.notifier.local.enabled=true
 ```
 
 ## Usage

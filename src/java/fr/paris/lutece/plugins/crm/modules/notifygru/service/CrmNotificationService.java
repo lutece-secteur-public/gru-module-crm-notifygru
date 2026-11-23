@@ -37,7 +37,7 @@ package fr.paris.lutece.plugins.crm.modules.notifygru.service;
 import java.sql.Timestamp;
 import java.util.Locale;
 
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -55,10 +55,28 @@ import fr.paris.lutece.plugins.grubusiness.business.notification.Event;
 import fr.paris.lutece.plugins.grubusiness.business.notification.NotifyGruResponse;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.util.json.AbstractJsonResponse;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
+@ApplicationScoped
 public class CrmNotificationService
 {
     private final static String CHARECTER_REGEXP_FILTER = "[^\\p{L}\\p{M}\\p{N}\\p{P}\\p{Z}\\p{Cf}\\p{Cs}\\p{Sm}\\p{Sc}\\s]";
+
+    @Inject
+    private CRMService _crmService;
+
+    @Inject
+    private CRMUserService _crmUserService;
+
+    @Inject
+    private DemandService _demandService;
+
+    @Inject
+    private DemandStatusCRMService _demandStatusCRMService;
+
+    @Inject
+    private DemandTypeService _demandTypeService;
 
 
     /**
@@ -67,7 +85,7 @@ public class CrmNotificationService
      * @param notification
      *            the notification to store
      */
-    public static NotifyGruResponse store( fr.paris.lutece.plugins.grubusiness.business.notification.Notification gruNotification, Locale locale )
+    public NotifyGruResponse store( fr.paris.lutece.plugins.grubusiness.business.notification.Notification gruNotification, Locale locale )
     {    
         // check if connection id is present
         if ( gruNotification.getDemand( ) == null || gruNotification.getDemand( ).getCustomer( ) == null
@@ -92,7 +110,7 @@ public class CrmNotificationService
         int demandTypeId = Integer.parseInt( gruNotification.getDemand( ).getTypeId( ) );
         
         // check if  demand type id exists
-        if ( DemandTypeService.getService().findByPrimaryKey( demandTypeId  ) == null ) 
+        if ( _demandTypeService.findByPrimaryKey( demandTypeId  ) == null ) 
         {
             return error( CrmNotifyGruConstants.MESSAGE_INCORRECT_DEMAND_ID, Response.Status.PRECONDITION_FAILED, null );
         }
@@ -101,7 +119,7 @@ public class CrmNotificationService
         Demand crmDemand = getCrmDemand( gruNotification );
 
         // check if crm Demand already exists
-        Demand storedDemand = DemandService.getService( ).findByRemoteKey( crmDemand.getRemoteId( ), crmDemand.getIdDemandType( ) );
+        Demand storedDemand = _demandService.findByRemoteKey( crmDemand.getRemoteId( ), crmDemand.getIdDemandType( ) );
         int demandId = -1;
 
         if ( storedDemand != null )
@@ -109,7 +127,7 @@ public class CrmNotificationService
             demandId = storedDemand.getIdDemand( );
 
             // check if the customer id still the same
-            CRMUser storedUser = CRMUserService.getService( ).findByUserGuid( gruNotification.getDemand( ).getCustomer( ).getConnectionId( ) );
+            CRMUser storedUser = _crmUserService.findByUserGuid( gruNotification.getDemand( ).getCustomer( ).getConnectionId( ) );
 
             if ( storedUser != null && ( storedUser.getIdCRMUser( ) != storedDemand.getIdCRMUser( ) ) )
             {
@@ -134,19 +152,19 @@ public class CrmNotificationService
             // set status label if not set
             if ( StringUtils.isBlank( storedDemand.getStatusText( ) ) )
             {
-            	DemandStatusCRM statusCRM = DemandStatusCRMService.getService( ).getStatusCRM( crmDemand.getIdStatusCRM( ), locale );
+            	DemandStatusCRM statusCRM = _demandStatusCRMService.getStatusCRM( crmDemand.getIdStatusCRM( ), locale );
             	storedDemand.setStatusText( statusCRM.getLabel( ) );
             }  
       
 
             // update stored demand
-            DemandService.getService( ).update( storedDemand );
+            _demandService.update( storedDemand );
         }
         else
         {
             // create user if not exists in CRM database
             int nUserId;
-            CRMUser storedUser = CRMUserService.getService( ).findByUserGuid( gruNotification.getDemand( ).getCustomer( ).getConnectionId( ) );
+            CRMUser storedUser = _crmUserService.findByUserGuid( gruNotification.getDemand( ).getCustomer( ).getConnectionId( ) );
             if ( storedUser != null )
             {
                 nUserId = storedUser.getIdCRMUser( );
@@ -157,7 +175,7 @@ public class CrmNotificationService
                 crmUser.setUserGuid( gruNotification.getDemand( ).getCustomer( ).getConnectionId( ) );
                 crmUser.setMustBeUpdated( true );
 
-                nUserId = CRMUserService.getService( ).create( crmUser );
+                nUserId = _crmUserService.create( crmUser );
             }
 
             crmDemand.setIdCRMUser( nUserId );
@@ -165,7 +183,7 @@ public class CrmNotificationService
             // get status text if not set in notif
             if ( StringUtils.isBlank( crmDemand.getStatusText() ) && crmDemand.getIdStatusCRM( ) >= 0 )
             {
-                DemandStatusCRM statusCRM = DemandStatusCRMService.getService( ).getStatusCRM( crmDemand.getIdStatusCRM( ), locale );
+                DemandStatusCRM statusCRM = _demandStatusCRMService.getStatusCRM( crmDemand.getIdStatusCRM( ), locale );
                 if ( statusCRM != null )
                 {
                     crmDemand.setStatusText( statusCRM.getLabel( ) );
@@ -173,13 +191,13 @@ public class CrmNotificationService
             }
 
             // create demand
-            demandId = DemandService.getService( ).create( crmDemand );
+            demandId = _demandService.create( crmDemand );
         }
 
         // get CRM notification from GRU notification
         Notification crmNotification = getCrmNotification( gruNotification );
 
-        CRMService.getService( ).notify( demandId, crmNotification.getObject( ), crmNotification.getMessage( ), crmNotification.getSender( ) );
+        _crmService.notify( demandId, crmNotification.getObject( ), crmNotification.getMessage( ), crmNotification.getSender( ) );
 
         NotifyGruResponse response = new NotifyGruResponse ( );
         response.setStatus ( NotifyGruResponse.STATUS_RECEIVED );
@@ -194,7 +212,7 @@ public class CrmNotificationService
      * @param gruNotification
      * @return the demand
      */
-    private static Demand getCrmDemand( fr.paris.lutece.plugins.grubusiness.business.notification.Notification gruNotification )
+    private Demand getCrmDemand( fr.paris.lutece.plugins.grubusiness.business.notification.Notification gruNotification )
     {
         Demand crmDemand = new Demand( );
 

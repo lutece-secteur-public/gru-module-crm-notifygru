@@ -37,18 +37,20 @@ package fr.paris.lutece.plugins.crm.modules.notifygru.web.rs;
 import java.util.List;
 import java.util.Locale;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -64,11 +66,23 @@ import fr.paris.lutece.portal.service.i18n.I18nService;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.util.json.ErrorJsonResponse;
 import fr.paris.lutece.util.json.JsonUtil;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 @Path( RestConstants.BASE_PATH + CrmNotifyGruConstants.API_PATH + CrmNotifyGruConstants.VERSION_PATH + CrmNotifyGruConstants.PLUGIN_NAME )
+@ApplicationScoped
 public class CrmNotifyGruRestService
 {
-    private final Logger _logger = Logger.getLogger( RestConstants.REST_LOGGER );
+    private static final String PROPERTY_REST_ENABLED = "crm-notifygru.rest.enabled";
+    private final ObjectMapper _responseMapper = new ObjectMapper( );
+    private final Logger _logger = LogManager.getLogger( RestConstants.REST_LOGGER );
+
+    @Inject
+    private CrmNotificationService _crmNotificationService;
+
+    @Inject
+    @ConfigProperty( name = PROPERTY_REST_ENABLED, defaultValue = "false" )
+    private boolean _bEnabled;
     
     /**
      * Web Service methode which permit to store the notification flow into a data store
@@ -85,6 +99,11 @@ public class CrmNotifyGruRestService
     @Produces( MediaType.APPLICATION_JSON )
     public Response notifications( @PathParam( CrmNotifyGruConstants.VERSION ) Integer nVersion, String strJson, @Context HttpServletRequest request )
     {
+        if ( !_bEnabled )
+        {
+            return Response.status( Response.Status.NOT_FOUND ).build( );
+        }
+
 	NotifyGruResponse gruResponse;
 	
         if ( nVersion == CrmNotifyGruConstants.VERSION_1 )
@@ -93,7 +112,8 @@ public class CrmNotifyGruRestService
             
             return Response.status( NotifyGruResponse.STATUS_ERROR.equals ( gruResponse.getStatus( ) )
         	    ?Response.Status.BAD_REQUEST:Response.Status.CREATED )
-                    .entity( gruResponse )
+                    .type( MediaType.APPLICATION_JSON )
+                    .entity( toJson( gruResponse ) )
                     .build( );
         }
         else
@@ -104,7 +124,8 @@ public class CrmNotifyGruRestService
             _logger.error( CrmNotifyGruConstants.ERROR_NOT_FOUND_VERSION );
             
             return Response.status( Response.Status.NOT_FOUND )
-                    .entity( gruResponse )
+                    .type( MediaType.APPLICATION_JSON )
+                    .entity( toJson( gruResponse ) )
                     .build( );
         }
     }
@@ -126,9 +147,9 @@ public class CrmNotifyGruRestService
 
             fr.paris.lutece.plugins.grubusiness.business.notification.Notification gruNotification = mapper.readValue( strJson,
                     fr.paris.lutece.plugins.grubusiness.business.notification.Notification.class );
-            AppLogService.debug( "crm-notifygru / notification - Received strJson : " + strJson );
+            AppLogService.debug( "crm-notifygru / notification - Received strJson : {}", strJson );
 
-            return CrmNotificationService.store( gruNotification, locale );
+            return _crmNotificationService.store( gruNotification, locale );
         }
         catch ( JsonProcessingException ex )
         {
@@ -152,6 +173,10 @@ public class CrmNotifyGruRestService
     @Produces( MediaType.APPLICATION_JSON )
     public Response getDemandTypes( )
     {
+        if ( !_bEnabled )
+        {
+            return Response.status( Response.Status.NOT_FOUND ).build( );
+        }
 
         List<DemandType> listDemandTypes = DemandTypeHome.findAll( );
         try
@@ -166,5 +191,18 @@ public class CrmNotifyGruRestService
             return Response.serverError( ).build( );
         }
 
+    }
+
+    private String toJson( NotifyGruResponse gruResponse )
+    {
+        try
+        {
+            return _responseMapper.writeValueAsString( gruResponse );
+        }
+        catch( JsonProcessingException e )
+        {
+            AppLogService.error( e.getMessage( ), e );
+            return null;
+        }
     }
 }
