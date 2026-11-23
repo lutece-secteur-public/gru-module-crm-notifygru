@@ -19,21 +19,16 @@ Rest service to list demand types
 
 ## Configuration
 
-Declare the Rest Service in the context file :
+Enable the Rest Service in the site properties (`WEB-INF/conf/override/plugins/crm-notifygru.properties`) :
 
 ```
-
-                    <bean name="crmnotifygru.restService" class="fr.paris.lutece.plugins.crm.modules.notifygru.web.rs.CrmNotifyGruRestService" />
-                
+crm-notifygru.rest.enabled=true
 ```
 
-Or declare the local notifier (if CRM is available in the same site than the notifygru library)
+Or enable the local notifier (if CRM is available in the same site than the notifygru library)
 
 ```
-
-                  <bean name="crmnotifygru.localNotifierService" class="fr.paris.lutece.plugins.crm.modules.notifygru.service.CrmNotifierService" />
-                
-                
+crm-notifygru.notifier.local.enabled=true
 ```
 
 ## Usage

@@ -25,15 +25,14 @@
                 
             </subsection>
             <subsection name="Configuration">
-                  <p>Declaration du Rest Service dans le contexte : </p>
+                  <p>Activation du Rest Service dans les propriétés du site (WEB-INF/conf/override/plugins/crm-notifygru.properties) : </p>
                 <pre>
-                    &lt;bean name="crmnotifygru.restService" class="fr.paris.lutece.plugins.crm.modules.notifygru.web.rs.CrmNotifyGruRestService" /&gt;
+                    crm-notifygru.rest.enabled=true
                 </pre>
-                <p>Ou déclaration du "notifier" local (si CRM est utisé dans le même site que la librairie notifygru) 
+                <p>Ou activation du "notifier" local (si CRM est utisé dans le même site que la librairie notifygru) 
                 </p>
                 <pre>
-                  &lt;bean name="crmnotifygru.localNotifierService" class="fr.paris.lutece.plugins.crm.modules.notifygru.service.CrmNotifierService" /&gt;
-                
+                  crm-notifygru.notifier.local.enabled=true
                 </pre>
             </subsection>
             <subsection name="Usage">

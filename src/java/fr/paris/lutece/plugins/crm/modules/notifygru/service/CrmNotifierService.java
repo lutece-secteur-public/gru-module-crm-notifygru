@@ -41,9 +41,25 @@ import fr.paris.lutece.plugins.grubusiness.business.notification.Notification;
 import fr.paris.lutece.plugins.grubusiness.business.notification.NotifyGruResponse;
 import fr.paris.lutece.plugins.grubusiness.service.notification.INotifierServiceProvider;
 import fr.paris.lutece.plugins.grubusiness.service.notification.NotificationException;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+@ApplicationScoped
+@Named( CrmNotifierService.BEAN_NAME )
 public class CrmNotifierService implements INotifierServiceProvider
 {
+    public static final String BEAN_NAME = "crm.notifygru.localNotifierService";
+    private static final String PROPERTY_NOTIFIER_ENABLED = "crm-notifygru.notifier.local.enabled";
+
+    @Inject
+    private CrmNotificationService _crmNotificationService;
+
+    @Inject
+    @ConfigProperty( name = PROPERTY_NOTIFIER_ENABLED, defaultValue = "false" )
+    private boolean _bEnabled;
 
     @Override
     public NotifyGruResponse process( Notification notification ) throws NotificationException
@@ -53,12 +69,18 @@ public class CrmNotifierService implements INotifierServiceProvider
 	    return null;
 	}    
 	
-        return CrmNotificationService.store ( notification, null);
+        return _crmNotificationService.store ( notification, null);
     }
 
     @Override
     public List<EnumNotificationType> getNotificationTypes( )
     {
 	return Arrays.asList(EnumNotificationType.MYDASHBOARD);
+    }
+
+    @Override
+    public boolean isEnabled( )
+    {
+        return _bEnabled;
     }
 }
